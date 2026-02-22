@@ -44,6 +44,7 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
 @implementation EmulationiOSViewController {
   DOLEmulationVisibleTouchPad _visibleTouchPad;
   int _stateSlot;
+  NSTimer* _pullDownHideTimer;
 }
 
 - (void)viewDidLoad {
@@ -79,6 +80,8 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
     self.pullDownLeftConstraint.active = false;
     self.pullDownCenterConstraint.active = true;
   }
+
+  [self schedulePullDownHideTimer];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -91,6 +94,9 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
+
+  [_pullDownHideTimer invalidate];
+  _pullDownHideTimer = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self name:DOLHostTitleChangedNotification object:nil];
   [[NSNotificationCenter defaultCenter] removeObserver:self name:DOLHostRequestRenderWindowSizeNotification object:nil];
@@ -486,7 +492,27 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
   }
 }
 
+- (void)schedulePullDownHideTimer {
+  [_pullDownHideTimer invalidate];
+  _pullDownHideTimer = [NSTimer scheduledTimerWithTimeInterval:10.0 target:self selector:@selector(hidePullDownButton) userInfo:nil repeats:NO];
+}
+
+- (void)hidePullDownButton {
+  [UIView animateWithDuration:0.3 animations:^{
+    // Use 0.02 instead of 0.0 so the button still receives touch events.
+    self.pullDownButton.alpha = 0.02;
+  }];
+}
+
+- (void)showPullDownButton {
+  [UIView animateWithDuration:0.3 animations:^{
+    self.pullDownButton.alpha = 1.0;
+  }];
+  [self schedulePullDownHideTimer];
+}
+
 - (IBAction)pullDownPressed:(id)sender {
+  [self showPullDownButton];
   [self updateNavigationBar:false];
 }
 
