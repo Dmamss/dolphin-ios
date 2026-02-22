@@ -44,6 +44,7 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
 @implementation EmulationiOSViewController {
   DOLEmulationVisibleTouchPad _visibleTouchPad;
   int _stateSlot;
+  NSTimer* _pullDownHideTimer;
 }
 
 - (void)viewDidLoad {
@@ -79,6 +80,13 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
     self.pullDownLeftConstraint.active = false;
     self.pullDownCenterConstraint.active = true;
   }
+
+  // Tap anywhere on screen to show the pull-down button and reset the fade timer.
+  UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(showPullDownButton)];
+  tapRecognizer.cancelsTouchesInView = NO;
+  [self.view addGestureRecognizer:tapRecognizer];
+
+  [self showPullDownButton];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -91,6 +99,9 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
+
+  [_pullDownHideTimer invalidate];
+  _pullDownHideTimer = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self name:DOLHostTitleChangedNotification object:nil];
   [[NSNotificationCenter defaultCenter] removeObserver:self name:DOLHostRequestRenderWindowSizeNotification object:nil];
@@ -483,6 +494,42 @@ typedef NS_ENUM(NSInteger, DOLEmulationVisibleTouchPad) {
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [UIViewController attemptRotationToDeviceOrientation];
 #pragma clang diagnostic pop
+  }
+}
+
+- (void)showPullDownButton {
+  [_pullDownHideTimer invalidate];
+  _pullDownHideTimer = nil;
+
+  [UIView animateWithDuration:0.3f animations:^{
+    self.pullDownButton.alpha = 1.0f;
+  }];
+
+  _pullDownHideTimer = [NSTimer scheduledTimerWithTimeInterval:10.0
+                                                        target:self
+                                                      selector:@selector(hidePullDownButton)
+                                                      userInfo:nil
+                                                       repeats:NO];
+}
+
+- (void)hidePullDownButton {
+  _pullDownHideTimer = nil;
+  [UIView animateWithDuration:0.5f animations:^{
+    self.pullDownButton.alpha = 0.0f;
+  }];
+}
+
+- (void)updateNavigationBar:(bool)hidden {
+  [super updateNavigationBar:hidden];
+
+  if (hidden) {
+    // Nav bar just hidden — show pull-down button and start fade timer.
+    [self showPullDownButton];
+  } else {
+    // Nav bar now visible — hide pull-down button immediately.
+    [_pullDownHideTimer invalidate];
+    _pullDownHideTimer = nil;
+    self.pullDownButton.alpha = 0.0f;
   }
 }
 
