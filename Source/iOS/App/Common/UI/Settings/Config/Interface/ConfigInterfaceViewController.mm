@@ -29,6 +29,10 @@
   
   self.osdMessagesSwitch.on = Config::Get(Config::MAIN_OSD_MESSAGES);
   [self.osdMessagesSwitch addValueChangedTarget:self action:@selector(osdMessagesChanged)];
+
+  NSInteger orientationPref = [[NSUserDefaults standardUserDefaults] integerForKey:@"DOLOrientationLock"];
+  self.orientationLockSegmentedControl.selectedSegmentIndex = orientationPref;
+  [self.orientationLockSegmentedControl addTarget:self action:@selector(orientationLockChanged) forControlEvents:UIControlEventValueChanged];
 }
 
 - (void)namesChanged {
@@ -49,6 +53,20 @@
 
 - (void)osdMessagesChanged {
   Config::SetBase(Config::MAIN_OSD_MESSAGES, self.osdMessagesSwitch.on);
+}
+
+- (void)orientationLockChanged {
+  NSInteger selectedIndex = self.orientationLockSegmentedControl.selectedSegmentIndex;
+  [[NSUserDefaults standardUserDefaults] setInteger:selectedIndex forKey:@"DOLOrientationLock"];
+
+  if (@available(iOS 16.0, *)) {
+    [self setNeedsUpdateOfSupportedInterfaceOrientations];
+  } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    [UIViewController attemptRotationToDeviceOrientation];
+#pragma clang diagnostic pop
+  }
 }
 
 @end

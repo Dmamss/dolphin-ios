@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) IBOutlet DOLSwitch* panicHandlersSwitch;
 @property (weak, nonatomic) IBOutlet DOLSwitch* stopSwitch;
 @property (weak, nonatomic) IBOutlet DOLSwitch* osdMessagesSwitch;
+@property (weak, nonatomic) IBOutlet UISegmentedControl* orientationLockSegmentedControl;
 
 @end
 

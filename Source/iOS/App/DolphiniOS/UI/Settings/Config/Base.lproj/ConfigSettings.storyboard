@@ -641,6 +641,33 @@
                                     </tableViewCell>
                                 </cells>
                             </tableViewSection>
+                            <tableViewSection headerTitle="Orientation Lock" id="oLk-sC-001">
+                                <cells>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" id="oLk-cL-002">
+                                        <rect key="frame" x="16" y="427.5" width="343" height="52"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="oLk-cL-002" id="oLk-cV-003">
+                                            <rect key="frame" x="0.0" y="0.0" width="343" height="52"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="oLk-sG-004">
+                                                    <rect key="frame" x="16" y="10" width="311" height="32"/>
+                                                    <segments>
+                                                        <segment title="Auto"/>
+                                                        <segment title="Portrait"/>
+                                                        <segment title="Landscape"/>
+                                                    </segments>
+                                                </segmentedControl>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="oLk-sG-004" firstAttribute="leading" secondItem="oLk-cV-003" secondAttribute="leadingMargin" id="oLk-c1-005"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="oLk-sG-004" secondAttribute="trailing" id="oLk-c2-006"/>
+                                                <constraint firstItem="oLk-sG-004" firstAttribute="centerY" secondItem="oLk-cV-003" secondAttribute="centerY" id="oLk-c3-007"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </cells>
+                            </tableViewSection>
                         </sections>
                         <connections>
                             <outlet property="dataSource" destination="pzm-hV-r0A" id="0Hg-gV-2oO"/>
@@ -652,6 +679,7 @@
                     <connections>
                         <outlet property="coversSwitch" destination="bMJ-zx-KaP" id="bn3-a5-lbS"/>
                         <outlet property="namesSwitch" destination="dnC-sr-Aeo" id="mXB-Xy-H8d"/>
+                        <outlet property="orientationLockSegmentedControl" destination="oLk-sG-004" id="oLk-oC-008"/>
                         <outlet property="osdMessagesSwitch" destination="Baf-x0-Gjp" id="ZPm-BY-Huz"/>
                         <outlet property="panicHandlersSwitch" destination="c4T-ge-Oz3" id="4Ge-cJ-0iL"/>
                         <outlet property="stopSwitch" destination="czp-V2-4hl" id="fAF-vc-dg9"/>

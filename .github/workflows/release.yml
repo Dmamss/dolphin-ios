@@ -4,39 +4,31 @@ on:
   release:
     types:
       - published
+  workflow_dispatch:
 
 jobs:
   build:
-    # runs-on: macos-12
-    runs-on: [self-hosted, macOS]
-    
+    runs-on: macos-15
+
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+          fetch-depth: 0
 
-      # - name: Set Xcode Version
-      #   run: sudo xcode-select -s /Applications/Xcode_14.2.app
+      - name: Set Xcode Version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.2'
 
-      # - name: Install Build Utilities
-      #   run: |
-      #     brew install cmake ninja bartycrouch dpkg
-      #     /usr/bin/python3 -m pip install polib
-      
-      # - name: Import Signing Certificate
-      #   run: |
-      #     echo ${{ secrets.DIOS_SIGNING_CERTIFICATE }} | base64 -d > "SigningCertificate.p12"
-      #     security create-keychain -p alpine build.keychain
-      #     security default-keychain -s build.keychain
-      #     security unlock-keychain -p alpine build.keychain
-      #     security set-keychain-settings -t 36000 build.keychain
-      #     security import "SigningCertificate.p12" -k build.keychain -P ${{ secrets.DIOS_SIGNING_CERTIFICATE_PASSWORD }} -A
-      #     security set-key-partition-list -S apple-tool:,apple: -s -k alpine build.keychain
+      - name: Install Build Utilities
+        run: brew install dpkg
 
       - name: Write GoogleServices-Info.plist
+        if: ${{ secrets.DIOS_GOOGLE_PLIST != '' }}
         run: |
           echo ${{ secrets.DIOS_GOOGLE_PLIST }} | base64 -d > "Source/iOS/App/Project/Assets/GoogleService-Info.plist"
-      
+
       - name: Set Schema for Normal
         if: "!github.event.release.prerelease"
         run: |
@@ -44,7 +36,7 @@ jobs:
           echo "XCODE_CONFIGURATION_JB=Release (Jailbroken)" >> $GITHUB_ENV
           echo "XCODE_CONFIGURATION_TS=Release (TrollStore)" >> $GITHUB_ENV
           echo "DEB_CONTROL_NAME=control-normal" >> $GITHUB_ENV
-      
+
       - name: Set Schema for Beta
         if: "github.event.release.prerelease"
         run: |
@@ -62,19 +54,19 @@ jobs:
           xcodebuild archive -archivePath "${{ github.workspace }}/archives/NonJailbroken.xcarchive" -configuration "${{ env.XCODE_CONFIGURATION_NJB }}" -scheme "DiOS (NJB)" ${{ env.XCODE_COMMON_BUILD_ARGS }}
           xcodebuild archive -archivePath "${{ github.workspace }}/archives/Jailbroken.xcarchive" -configuration "${{ env.XCODE_CONFIGURATION_JB }}" -scheme "DiOS (JB)" ${{ env.XCODE_COMMON_BUILD_ARGS }}
           xcodebuild archive -archivePath "${{ github.workspace }}/archives/TrollStore.xcarchive" -configuration "${{ env.XCODE_CONFIGURATION_TS }}" -scheme "DiOS (JB)" ${{ env.XCODE_COMMON_BUILD_ARGS }}
-      
+
       - name: Build IPA Files
         run: |
           mkdir "${{ github.workspace }}/products"
-          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateIpa.sh" "${{ github.workspace }}/archives/NonJailbroken.xcarchive/Products/Applications/DolphiniOS.app" "OatmealDome Software" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Public.entitlements" "${{ github.workspace }}/products/Non-Jailbroken.ipa"
-          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateIpa.sh" "${{ github.workspace }}/archives/TrollStore.xcarchive/Products/Applications/DolphiniOS.app" "OatmealDome Software" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Private.entitlements" "${{ github.workspace }}/products/TrollStore.tipa"
-      
+          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateIpa.sh" "${{ github.workspace }}/archives/NonJailbroken.xcarchive/Products/Applications/DolphiniOS.app" "-" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Public.entitlements" "${{ github.workspace }}/products/Non-Jailbroken.ipa"
+          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateIpa.sh" "${{ github.workspace }}/archives/TrollStore.xcarchive/Products/Applications/DolphiniOS.app" "-" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Private.entitlements" "${{ github.workspace }}/products/TrollStore.tipa"
+
       - name: Build DEB File
         run: |
-          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateDeb.sh" "${{ github.workspace }}/archives/Jailbroken.xcarchive/Products/Applications/DolphiniOS.app" "OatmealDome Software" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Private.entitlements" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/${{ env.DEB_CONTROL_NAME }}.in" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postinst.sh" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postrm.sh" "Applications" "${{ github.workspace }}/products/Jailbroken-Rootful.deb"
-          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateDeb.sh" "${{ github.workspace }}/archives/Jailbroken.xcarchive/Products/Applications/DolphiniOS.app" "OatmealDome Software" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Private.entitlements" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/${{ env.DEB_CONTROL_NAME }}-rootless.in" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postinst.sh" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postrm.sh" "var/jb/Applications" "${{ github.workspace }}/products/Jailbroken-Rootless.deb"
-      
-      - uses: softprops/action-gh-release@v1
+          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateDeb.sh" "${{ github.workspace }}/archives/Jailbroken.xcarchive/Products/Applications/DolphiniOS.app" "-" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Private.entitlements" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/${{ env.DEB_CONTROL_NAME }}.in" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postinst.sh" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postrm.sh" "Applications" "${{ github.workspace }}/products/Jailbroken-Rootful.deb"
+          "${{ github.workspace }}/Source/iOS/App/Project/Scripts/CreateDeb.sh" "${{ github.workspace }}/archives/Jailbroken.xcarchive/Products/Applications/DolphiniOS.app" "-" "${{ github.workspace }}/Source/iOS/App/Project/Entitlements/Private.entitlements" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/${{ env.DEB_CONTROL_NAME }}-rootless.in" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postinst.sh" "${{ github.workspace }}/Source/iOS/App/Project/Package/Deb/postrm.sh" "var/jb/Applications" "${{ github.workspace }}/products/Jailbroken-Rootless.deb"
+
+      - uses: softprops/action-gh-release@v2
         with:
           files: |
             products/Non-Jailbroken.ipa
