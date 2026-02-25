@@ -24,8 +24,8 @@ jobs:
 
       - name: Install Build Utilities
         run: |
-          brew install cmake ninja bartycrouch
-          /usr/bin/python3 -m pip install polib
+          brew install cmake ninja bartycrouch dpkg
+          /usr/bin/python3 -m pip install --break-system-packages polib
 
       - name: Set Schema
         run: |
